@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>আল-কোরআন প্রো</title>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Hind+Siliguri:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #006064;
+            --secondary-color: #00838f;
+            --bg-color: #f0f2f5;
+            --text-color: #2c3e50;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Hind Siliguri', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            background-color: var(--primary-color);
+            color: var(--white);
+            padding: 15px 20px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+
+        /* Layout */
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden; /* Prevent body scroll */
+        }
+
+        /* Sidebar (Surah List) */
+        .sidebar {
+            width: 260px;
+            background: var(--white);
+            border-right: 1px solid #ddd;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-header {
+            padding: 15px;
+            background: #eee;
+            font-weight: bold;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .surah-list-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .surah-list-item:hover {
+            background-color: #e0f7fa;
+        }
+
+        .surah-list-item.active {
+            background-color: var(--secondary-color);
+            color: var(--white);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Top Player Bar */
+        .player-bar {
+            background: var(--white);
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .surah-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .controls button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-left: 5px;
+        }
+
+        .controls button.stop {
+            background: #d32f2f;
+        }
+
+        /* Ayah Container */
+        .ayah-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            scroll-behavior: smooth;
+        }
+
+        .ayah-card {
+            background: var(--white);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-left: 4px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .ayah-card:hover {
+            border-left: 4px solid var(--primary-color);
+            transform: translateX(5px);
+        }
+
+        .ayah-card.playing {
+            background-color: #e0f2f1;
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        .arabic-text {
+            font-family: 'Amiri', serif;
+            font-size: 28px;
+            text-align: right;
+            color: #000;
+            line-height: 2.2;
+            margin-bottom: 15px;
+        }
+
+        .bangla-text {
+            font-size: 17px;
+            color: #444;
+            line-height: 1.6;
+        }
+
+        .ayah-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+            font-size: 12px;
+            color: #777;
+        }
+
+        .play-icon {
+            cursor: pointer;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        /* Modal (Tafseer/Detail) */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: var(--white);
+            padding: 25px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 25px;
+            cursor: pointer;
+            color: #d32f2f;
+        }
+
+        /* Loading Spinner */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container { flex-direction: column; }
+            .sidebar { width: 100%; height: 200px; flex: none; }
+            .arabic-text { font-size: 22px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h2>আল-কোরআন (অডিও ও অনুবাদ)</h2>
+</header>
+
+<div class="container">
+    <div class="sidebar">
+        <div class="sidebar-header">সূরা তালিকা (১-১১৪)</div>
+        <div id="surah-list">
+            <div class="loader" style="display:block;" id="list-loader"></div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="player-bar">
+            <div class="surah-title" id="current-surah-title">একটি সূরা নির্বাচন করুন</div>
+            <div class="controls">
+                <button onclick="playFullSurah()" id="play-all-btn" disabled>▶ সম্পূর্ণ শুনুন</button>
+                <button onclick="stopAudio()" class="stop" id="stop-btn" style="display:none;">⏹ বন্ধ করুন</button>
+            </div>
+        </div>
+
+        <div class="ayah-container" id="ayah-list">
+            <div style="text-align:center; padding: 50px; color: #777;">
+                বাম পাশের তালিকা থেকে যেকোনো একটি সূরা নির্বাচন করুন।<br>
+                ১১৪টি সূরা লোড করা আছে।
+            </div>
+            <div class="loader" id="content-loader"></div>
+        </div>
+    </div>
+</div>
+
+<div id="tafseerModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <h3 id="modal-title" style="color:var(--primary-color); border-bottom:1px solid #ddd; padding-bottom:10px;">বিস্তারিত</h3>
+        <p id="modal-arabic" class="arabic-text" style="font-size:24px; color:#333;"></p>
+        <div id="modal-bangla" style="font-size:18px; line-height:1.7; margin-top:20px;"></div>
+        <div style="margin-top:20px; padding:10px; background:#f9f9f9; font-size:13px; color: #666;">
+            * তাফসীর: এটি আয়াতের বিস্তারিত বাংলা অর্থ।
+        </div>
+    </div>
+</div>
+
+<script>
+    // Global Variables
+    const API_SURAH_LIST = 'https://api.alquran.cloud/v1/surah';
+    // Using Alafasy for Audio/Arabic and Bengali for translation
+    const API_SURAH_DETAILS = 'https://api.alquran.cloud/v1/surah/{number}/editions/ar.alafasy,bn.bengali';
+    
+    let currentAudio = new Audio();
+    let audioPlaylist = [];
+    let currentPlayIndex = 0;
+    let isPlaylistPlaying = false;
+
+    // 1. Initialize: Load Surah List
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchSurahList();
+    });
+
+    // 2. Fetch 114 Surahs
+    async function fetchSurahList() {
+        try {
+            const response = await fetch(API_SURAH_LIST);
+            const data = await response.json();
+            
+            const listContainer = document.getElementById('surah-list');
+            document.getElementById('list-loader').style.display = 'none';
+            
+            if(data.code === 200) {
+                data.data.forEach(surah => {
+                    const item = document.createElement('div');
+                    item.className = 'surah-list-item';
+                    item.innerHTML = `
+                        <span>${surah.number}. ${surah.englishName}</span>
+                        <span style="font-size:12px; color:#666;">${surah.englishNameTranslation}</span>
+                    `;
+                    item.onclick = () => loadSurahContent(surah.number, surah.englishName, surah.englishNameTranslation);
+                    listContainer.appendChild(item);
+                });
+            } else {
+                listContainer.innerHTML = '<p style="padding:10px; color:red;">তথ্য লোড করতে সমস্যা হয়েছে।</p>';
+            }
+        } catch (error) {
+            console.error(error);
+            document.getElementById('list-loader').style.display = 'none';
+            document.getElementById('surah-list').innerHTML = '<p style="padding:10px; color:red;">ইন্টারনেট সংযোগ চেক করুন।</p>';
+        }
+    }
+
+    // 3. Load Specific Surah
+    async function loadSurahContent(number, nameEnglish, nameBangla) {
+        // UI Updates
+        document.getElementById('current-surah-title').innerText = `${number}. ${nameEnglish} (${nameBangla})`;
+        document.getElementById('ayah-list').innerHTML = '';
+        document.getElementById('content-loader').style.display = 'block';
+        document.getElementById('play-all-btn').disabled = true;
+        stopAudio();
+
+        // Highlight Active Item
+        document.querySelectorAll('.surah-list-item').forEach(el => el.classList.remove('active'));
+        // (Note: To strictly highlight the clicked element, we'd need to pass 'this', but for simplicity skipping explicit DOM traversal here)
+
+        try {
+            const url = API_SURAH_DETAILS.replace('{number}', number);
+            const response = await fetch(url);
+            const data = await response.json();
+
+            document.getElementById('content-loader').style.display = 'none';
+
+            if(data.code === 200) {
+                // API returns an array: [0] is Arabic/Audio, [1] is Bangla
+                const arabicData = data.data[0].ayahs;
+                const banglaData = data.data[1].ayahs;
+
+                audioPlaylist = []; // Reset playlist
+                const container = document.getElementById('ayah-list');
+
+                arabicData.forEach((ayah, index) => {
+                    // Prepare Data
+                    const audioUrl = ayah.audio;
+                    const arabicText = ayah.text;
+                    const banglaText = banglaData[index].text; // Matching index
+                    const ayahNum = ayah.numberInSurah;
+
+                    // Add to playlist
+                    audioPlaylist.push({
+                        url: audioUrl,
+                        elementId: `ayah-${index}`
+                    });
+
+                    // Create Card
+                    const card = document.createElement('div');
+                    card.className = 'ayah-card';
+                    card.id = `ayah-${index}`;
+                    
+                    // HTML Content
+                    card.innerHTML = `
+                        <div class="arabic-text">${arabicText}</div>
+                        <div class="bangla-text">${banglaText}</div>
+                        <div class="ayah-info">
+                            <span>আয়াত: ${ayahNum}</span>
+                            <span class="play-icon" onclick="event.stopPropagation(); playSingle(${index})">🔊 শুনুন</span>
+                        </div>
+                    `;
+
+                    // Click event for Modal (Tafseer)
+                    card.onclick = () => openModal(nameEnglish, ayahNum, arabicText, banglaText);
+                    
+                    container.appendChild(card);
+                });
+
+                document.getElementById('play-all-btn').disabled = false;
+            }
+
+        } catch (error) {
+            console.error(error);
+            document.getElementById('content-loader').style.display = 'none';
+            document.getElementById('ayah-list').innerHTML = '<p style="padding:20px;">দুঃখিত, লোড করা যায়নি।</p>';
+        }
+    }
+
+    // 4. Audio Functions
+    function playSingle(index) {
+        stopAudio();
+        isPlaylistPlaying = false;
+        highlightAyah(index);
+        
+        currentAudio.src = audioPlaylist[index].url;
+        currentAudio.play();
+        
+        currentAudio.onended = () => removeHighlight(index);
+    }
+
+    function playFullSurah() {
+        stopAudio();
+        if(audioPlaylist.length === 0) return;
+
+        isPlaylistPlaying = true;
+        currentPlayIndex = 0;
+        
+        document.getElementById('play-all-btn').style.display = 'none';
+        document.getElementById('stop-btn').style.display = 'inline-block';
+        
+        playNextInQueue();
+    }
+
+    function playNextInQueue() {
+        if(!isPlaylistPlaying || currentPlayIndex >= audioPlaylist.length) {
+            stopAudio();
+            return;
+        }
+
+        // Remove highlight from previous
+        if(currentPlayIndex > 0) removeHighlight(currentPlayIndex - 1);
+        
+        highlightAyah(currentPlayIndex);
+        
+        currentAudio.src = audioPlaylist[currentPlayIndex].url;
+        currentAudio.play();
+
+        // Scroll into view
+        const el = document.getElementById(audioPlaylist[currentPlayIndex].elementId);
+        if(el) el.scrollIntoView({behavior: "smooth", block: "center"});
+
+        currentAudio.onended = () => {
+            currentPlayIndex++;
+            playNextInQueue();
+        };
+    }
+
+    function stopAudio() {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        isPlaylistPlaying = false;
+        
+        // UI Reset
+        document.getElementById('play-all-btn').style.display = 'inline-block';
+        document.getElementById('stop-btn').style.display = 'none';
+        document.querySelectorAll('.ayah-card').forEach(el => el.classList.remove('playing'));
+    }
+
+    function highlightAyah(index) {
+        document.querySelectorAll('.ayah-card').forEach(el => el.classList.remove('playing'));
+        const el = document.getElementById(`ayah-${index}`);
+        if(el) el.classList.add('playing');
+    }
+
+    function removeHighlight(index) {
+        const el = document.getElementById(`ayah-${index}`);
+        if(el) el.classList.remove('playing');
+    }
+
+    // 5. Modal Logic
+    function openModal(surahName, ayahNum, arabic, bangla) {
+        const modal = document.getElementById('tafseerModal');
+        document.getElementById('modal-title').innerText = `${surahName} - আয়াত ${ayahNum}`;
+        document.getElementById('modal-arabic').innerText = arabic;
+        document.getElementById('modal-bangla').innerText = bangla;
+        modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('tafseerModal').style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+        const modal = document.getElementById('tafseerModal');
+        if (event.target == modal) {
+            closeModal();
+        }
+    }
+</script>
+
+</body>
+</html>
